@@ -1,7 +1,5 @@
 package managers;
 
-import managers.IPersistentManager.PersistenceManager;
-
 public class Transaction {
     private final int id;
     private final PersistenceManager persistenceManager;

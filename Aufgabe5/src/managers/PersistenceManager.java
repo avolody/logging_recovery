@@ -1,6 +1,10 @@
 package managers;
 
-public class PersistanceManager implements IPersistentManager{
+
+public class PersistenceManager implements IPersistentManager{
+    
+    private static int taId = 0;
+    
     /**
      * starts a new transaction. The persistence manager creates a unique
      * transaction ID and returns it to the client
@@ -8,7 +12,7 @@ public class PersistanceManager implements IPersistentManager{
      * @return id
      */
     public int beginTransaction() {
-        return 0;
+        return taId++;
     }
 
     /**
@@ -21,7 +25,7 @@ public class PersistanceManager implements IPersistentManager{
      * @param data
      */
     public void write(int taid, int pageid, String data) {
-    	
+        System.out.println("TA: "+taid+", Page: "+pageid+" - "+data);
     }
 
     /**
