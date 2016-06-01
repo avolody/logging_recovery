@@ -1,13 +1,9 @@
-package clients;
+package managers;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author LJ
- */
-public class PersistanceManager {
+public class PersistanceManager implements IPersistentManager{
 
 // assumes the current class is called logger
 
