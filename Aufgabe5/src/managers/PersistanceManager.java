@@ -1,12 +1,6 @@
 package managers;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 public class PersistanceManager implements IPersistentManager{
-
-// assumes the current class is called logger
-
     /**
      * starts a new transaction. The persistence manager creates a unique
      * transaction ID and returns it to the client
@@ -27,6 +21,7 @@ public class PersistanceManager implements IPersistentManager{
      * @param data
      */
     public void write(int taid, int pageid, String data) {
+    	
     }
 
     /**
