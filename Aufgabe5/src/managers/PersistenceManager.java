@@ -1,9 +1,14 @@
 package managers;
 
+import java.util.ArrayList;
+import java.util.Map;
+
 
 public class PersistenceManager implements IPersistentManager{
     
     private static int taId = 0;
+    private static Map<Integer, Page> _buffer; // The buffer containing all												// currently used pages
+    private static Map<Integer, ArrayList<Integer>> _ongoingTransactions; // A
     
     /**
      * starts a new transaction. The persistence manager creates a unique
@@ -13,6 +18,8 @@ public class PersistenceManager implements IPersistentManager{
      */
     public int beginTransaction() {
         return taId++;
+        //TO-DO write BOT-Log
+        //TO-DO add to TA Array
     }
 
     /**
@@ -25,6 +32,7 @@ public class PersistenceManager implements IPersistentManager{
      * @param data
      */
     public void write(int taid, int pageid, String data) {
+        
         System.out.println("TA: "+taid+", Page: "+pageid+" - "+data);
     }
 
