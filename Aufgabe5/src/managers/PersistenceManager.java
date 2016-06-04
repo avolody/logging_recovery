@@ -1,5 +1,8 @@
 package managers;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -7,8 +10,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PersistenceManager implements IPersistentManager {
 
     private static int taId;
+    // pageId, page
     private static Map<Integer, Page> _buffer;
-    // taId, pageId
+    // taId, pageIds
     private static Map<Integer, ArrayList<Integer>> _ongoingTransactions;
 
     public PersistenceManager() {
@@ -49,13 +53,16 @@ public class PersistenceManager implements IPersistentManager {
 
         int lsn = 0;//TO-DO
         Page page = new Page(pageid, lsn, data);
-        
+
         System.out.println("TA: " + taid + ", Page: " + pageid + " - " + data);
-        _ongoingTransactions.get(taid).add(pageid);
+        
+        if (!_ongoingTransactions.get(taid).contains(pageid)) {
+            _ongoingTransactions.get(taid).add(pageid);
+        }
         
         _buffer.put(page.getPageId(), page);
         if (bufferFull()) {
-            pushCommittedPages();
+            pushCommittedTAs();
         }
     }
 
@@ -65,9 +72,10 @@ public class PersistenceManager implements IPersistentManager {
      * @param taid
      */
     public void commit(int taid) {
-        System.out.println("Commited TA: "+taid);
+        System.out.println("Committed TA: " + taid);
+        _ongoingTransactions.remove(taid);
         if (bufferFull()) {
-            pushCommittedPages();
+            pushCommittedTAs();
         }
     }
 
@@ -75,9 +83,50 @@ public class PersistenceManager implements IPersistentManager {
         return (_buffer.size() == 5);
     }
 
-    private void pushCommittedPages() {
-        _buffer.clear();
-        System.out.println("Buffer emptied");
+    private void pushCommittedTAs() {
+        //Iterate through Buffer PageIds
+        for (final int pageId : _buffer.keySet()) {
+            boolean pageCommitted = true;
+            //Check of the PageId is in one of the ongoing TAs
+            for (final ArrayList<Integer> pageIdArray : _ongoingTransactions.values()) {
+                if (pageIdArray.contains(pageId)) {
+                    //if found - it means not committed
+                    pageCommitted = false;
+                    break;
+                }
+            }
+            if (pageCommitted) {
+                writePageOnPersistenceStorage(pageId, _buffer.get(pageId).getLSN(), _buffer.get(pageId).getData());
+            }
+        }
+        //If the buffer is still full because there were 
+        //no committed TAs, clear it to avoid steal
+        if (_buffer.size() == 5) {
+            _buffer.clear();
+        }
+        System.out.println("Buffer emptied!");
     }
 
+    /**
+     *
+     * @param pageId
+     * @param lsn
+     * @param data
+     * @return Whether the page was written successfully or not
+     */
+    private boolean writePageOnPersistenceStorage(int pageId, int lsn, String data) {
+
+        File f = new File(pageId + ".txt");
+
+        try (FileWriter fw = new FileWriter(f)) {
+            fw.write(pageId + "," + lsn
+                    + "," + data);
+            fw.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return true;
+    }
 }

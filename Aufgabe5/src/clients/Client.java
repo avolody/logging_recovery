@@ -12,17 +12,16 @@ public class Client implements Runnable {
     private final PersistenceManager persistenceManager;
     private final int[] accessPages;
     private static int pagesCounter = 0;
-    
+
     Client(String name, PersistenceManager mgmt) {
         clientName = name;
         persistenceManager = mgmt;
         this.accessPages = new int[10];
         int i;
-        for (i=0;i<10;i++)
-        {
-            accessPages[i]=pagesCounter+i;
+        for (i = 0; i < 10; i++) {
+            accessPages[i] = pagesCounter + i;
         }
-        pagesCounter+=10;
+        pagesCounter += 10;
     }
 
     /**
@@ -44,20 +43,19 @@ public class Client implements Runnable {
 
     @Override
     /**
-     * Implemented Method of Runnable
-     * Create TA, write, sleep,..., commit
+     * Implemented Method of Runnable Create TA, write, sleep,..., commit
      */
     public void run() {
         try {
-            Random randomGenerator = new Random();
             Transaction tx = this.createTA();
-            tx.write(randomPage(), "My name is "+clientName);
-            Thread.sleep(randomGenerator.nextInt(5000)+200);
-            tx.write(randomPage(), clientName+" writes from page " + accessPages[0]);
-            Thread.sleep(randomGenerator.nextInt(5000)+200);
-            tx.write(randomPage(), clientName+" writes up to page " + accessPages[accessPages.length-1]);
-            Thread.sleep(randomGenerator.nextInt(5000)+200);
             
+            tx.write(randomPage(), "My name is " + clientName);
+            Thread.sleep((long) (Math.random() * 1000));
+            tx.write(randomPage(), clientName + " writes from page " + accessPages[0]);
+            Thread.sleep((long) (Math.random() * 1000));
+            tx.write(randomPage(), clientName + " writes up to page " + accessPages[accessPages.length - 1]);
+            Thread.sleep((long) (Math.random() * 1000));
+
             tx.commit();
         } catch (InterruptedException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
