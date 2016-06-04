@@ -15,14 +15,14 @@ import managers.PersistenceManager;
  */
 public class logAndRecoveryMain {
 
-    private static final int MYTHREADS = 3;
+    private static final int MYTHREADS = 5;
 
     public static void main(String args[]) throws Exception {
         
         PersistenceManager mgmt = new PersistenceManager();
         
         ExecutorService executor = Executors.newFixedThreadPool(MYTHREADS);
-        String[] hostList = {"Ada", "Mark", "Helge"};
+        String[] hostList = {"Ada", "Mark", "Helge", "Henning", "Lara"};
 
         for (String name : hostList) {
             Client client = new Client(name,mgmt);

@@ -51,11 +51,11 @@ public class Client implements Runnable {
         try {
             Random randomGenerator = new Random();
             Transaction tx = this.createTA();
-            tx.write(randomPage(), "My name is"+clientName);
+            tx.write(randomPage(), "My name is "+clientName);
             Thread.sleep(randomGenerator.nextInt(5000)+200);
-            tx.write(randomPage(), "I write on page " + accessPages[0]);
+            tx.write(randomPage(), clientName+" writes from page " + accessPages[0]);
             Thread.sleep(randomGenerator.nextInt(5000)+200);
-            tx.write(randomPage(), "...up to page " + accessPages[accessPages.length-1]);
+            tx.write(randomPage(), clientName+" writes up to page " + accessPages[accessPages.length-1]);
             Thread.sleep(randomGenerator.nextInt(5000)+200);
             
             tx.commit();

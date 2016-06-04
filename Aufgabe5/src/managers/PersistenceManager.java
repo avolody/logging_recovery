@@ -2,14 +2,21 @@ package managers;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+public class PersistenceManager implements IPersistentManager {
 
-public class PersistenceManager implements IPersistentManager{
-    
-    private static int taId = 0;
-    private static Map<Integer, Page> _buffer; // The buffer containing all												// currently used pages
-    private static Map<Integer, ArrayList<Integer>> _ongoingTransactions; // A
-    
+    private static int taId;
+    private static Map<Integer, Page> _buffer;
+    // taId, pageId
+    private static Map<Integer, ArrayList<Integer>> _ongoingTransactions;
+
+    public PersistenceManager() {
+        _ongoingTransactions = new ConcurrentHashMap<>();
+        _buffer = new ConcurrentHashMap<>();
+        taId = 0;
+    }
+
     /**
      * starts a new transaction. The persistence manager creates a unique
      * transaction ID and returns it to the client
@@ -17,9 +24,16 @@ public class PersistenceManager implements IPersistentManager{
      * @return id
      */
     public int beginTransaction() {
-        return taId++;
-        //TO-DO write BOT-Log
-        //TO-DO add to TA Array
+        try {
+            int nextTaId = this.taId++;
+            _ongoingTransactions.put(nextTaId, new ArrayList<Integer>());
+            //TO-DO write BOT-Log
+            //TO-DO add to TA Array
+            return nextTaId;
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            return 1000;
+        }
     }
 
     /**
@@ -32,8 +46,17 @@ public class PersistenceManager implements IPersistentManager{
      * @param data
      */
     public void write(int taid, int pageid, String data) {
+
+        int lsn = 0;//TO-DO
+        Page page = new Page(pageid, lsn, data);
         
-        System.out.println("TA: "+taid+", Page: "+pageid+" - "+data);
+        System.out.println("TA: " + taid + ", Page: " + pageid + " - " + data);
+        _ongoingTransactions.get(taid).add(pageid);
+        
+        _buffer.put(page.getPageId(), page);
+        if (bufferFull()) {
+            pushCommittedPages();
+        }
     }
 
     /**
@@ -42,7 +65,19 @@ public class PersistenceManager implements IPersistentManager{
      * @param taid
      */
     public void commit(int taid) {
-        
+        System.out.println("Commited TA: "+taid);
+        if (bufferFull()) {
+            pushCommittedPages();
+        }
+    }
+
+    private boolean bufferFull() {
+        return (_buffer.size() == 5);
+    }
+
+    private void pushCommittedPages() {
+        _buffer.clear();
+        System.out.println("Buffer emptied");
     }
 
 }
