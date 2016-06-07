@@ -15,11 +15,14 @@ public class PersistenceManager implements IPersistentManager {
     private static Map<Integer, Page> _buffer;
     // taId, pageIds
     private static Map<Integer, ArrayList<Integer>> _ongoingTransactions;
-
+    private LogManager logMng;
+    private LSNManager lsnMng;
+    
     public PersistenceManager() {
         _ongoingTransactions = new ConcurrentHashMap<>();
         _buffer = new ConcurrentHashMap<>();
         taId = 0;
+        logMng = new LogManager();
     }
 
     /**
@@ -32,7 +35,9 @@ public class PersistenceManager implements IPersistentManager {
         try {
             int nextTaId = this.taId++;
             _ongoingTransactions.put(nextTaId, new ArrayList<Integer>());
-            //TO-DO write BOT-Log
+            //TODO: write BOT-Log -> this must be checked
+            //logMng.writeLog());
+            
             //TO-DO add to TA Array
             return nextTaId;
         } catch (Exception e) {
@@ -133,6 +138,7 @@ public class PersistenceManager implements IPersistentManager {
 	}
 	
 	public String createPageFileName(int x){
+		//TODO: CREATE DIRECTORY
 		return "pages/" + x + ".txt";
 	}
 

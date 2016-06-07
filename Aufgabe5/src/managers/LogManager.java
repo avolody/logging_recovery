@@ -1,6 +1,7 @@
 package managers;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
@@ -8,9 +9,23 @@ import java.io.Writer;
 
 public class LogManager {
 	
-	void writeLog(FileWriter writer, Log log) {
+	private FileWriter fw;
+	
+	public LogManager(){
+		File path = new File("logs/");
+		path.mkdirs();
+		
+		File file = new File("logs/log");
+		try {
+			fw = new FileWriter(file, true);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	void writeLog(Log log) {
         try {
-			writer.write(log.toString());
+			fw.write(log.toString());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}      
