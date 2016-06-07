@@ -10,23 +10,22 @@ package managers;
  * @author LJ
  */
 public class Log {
-
+	
+	private int lsn;
     private int taId;
-
-    private int lsn;
-
     private int pageId;
-
     private String redo;
+    private String logType;
+    
+    public Log(int lsn, int taId, String logType, int pageId, String redo) {
+		this.lsn = lsn;
+		this.taId = taId;
+		this.pageId = pageId;
+		this.redo = redo;
+		this.logType = logType;
+	}
 
-    public Log(int pageId, int lsn, int taId) {
-        this.taId = taId;
-        this.lsn = lsn;
-        this.pageId = pageId;
-        this.redo = "";
-    }
-
-    public int getTaId() {
+	public int getTaId() {
         return taId;
     }
 
@@ -57,4 +56,17 @@ public class Log {
     public void setRedo(String redo) {
         this.redo = redo;
     }
+
+	public String getLogType() {
+		return logType;
+	}
+
+	public void setLogType(String logType) {
+		this.logType = logType;
+	}
+
+	@Override
+	public String toString() {
+		return lsn + "," + taId +  "," + logType +  "," + pageId +  ","  + redo + "\n"; 
+	}
 }

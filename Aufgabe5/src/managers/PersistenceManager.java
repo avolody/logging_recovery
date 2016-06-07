@@ -133,7 +133,7 @@ public class PersistenceManager implements IPersistentManager {
 	}
 	
 	public String createPageFileName(int x){
-		return "";
+		return "pages/" + x + ".txt";
 	}
 
     /**
