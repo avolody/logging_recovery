@@ -1,6 +1,4 @@
-package managers;
-
-public interface IPersistentManager {
+public interface IPersistenceManager {
 	public interface PersistenceManager {
 
 	    int beginTransaction();

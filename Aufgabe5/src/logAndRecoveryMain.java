@@ -3,11 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package clients;
+
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import managers.PersistenceManager;
 
 /**
  *
@@ -25,8 +24,8 @@ public class logAndRecoveryMain {
         String[] hostList = {"Ada", "Mark", "Helge", "Henning", "Lara"};
 
         for (String name : hostList) {
-            Client client = new Client(name,mgmt);
-            executor.execute(client);
+            //Client client = new Client(name,mgmt);
+            //executor.execute(client);
         }
         executor.shutdown();
         // Wait until all threads are finished
