@@ -33,6 +33,7 @@ public class logAndRecoveryMain {
         while (!executor.isTerminated()) {
 
         }
+        //mgmt.closeLog();
         System.out.println("\nFinished all threads");
     }
 }

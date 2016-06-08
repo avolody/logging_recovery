@@ -8,27 +8,29 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-@Singleton
 public class PersistenceManager {
 
     private static int taId;
     // pageId, page
-    private static Map<Integer, Page> _buffer;
+    private static Map<Integer, Page> pageBuffer;
     // taId, pageIds
-    private static Map<Integer, ArrayList<Integer>> _ongoingTransactions;
-    @Inject
+    private static Map<Integer, ArrayList<Integer>> currentTAs;
+
     private LogManager logMng;
-    @Inject
+
     private LSNManager lsnMng;
-    
+
     public PersistenceManager() {
-        _ongoingTransactions = new ConcurrentHashMap<>();
-        _buffer = new ConcurrentHashMap<>();
+        currentTAs = new ConcurrentHashMap<>();
+        pageBuffer = new ConcurrentHashMap<>();
         taId = 0;
         logMng = new LogManager();
+        lsnMng = new LSNManager();
+    }
+    
+    public void closeLog()
+    {
+        logMng.closeLog();
     }
 
     /**
@@ -39,11 +41,15 @@ public class PersistenceManager {
      */
     public int beginTransaction() {
         try {
-            int nextTaId = this.taId++;
-            _ongoingTransactions.put(nextTaId, new ArrayList<Integer>());
-            //TODO: write BOT-Log -> this must be checked
-            //logMng.writeLog());
             
+            int nextTaId = this.taId++;
+            System.out.println("Begin TA "+nextTaId);
+            currentTAs.put(nextTaId, new ArrayList<Integer>());
+            //TODO: write BOT-Log -> this must be checked
+            int lsn = lsnMng.nextLSN();
+            Log log = new Log(lsn, nextTaId, "BOT", 0, null);
+            logMng.writeLog(log);
+            System.out.println("BOT Log written.");
             //TO-DO add to TA Array
             return nextTaId;
         } catch (Exception e) {
@@ -63,18 +69,23 @@ public class PersistenceManager {
      */
     public void write(int taid, int pageid, String data) {
 
-        //int lsn = lsnMng.nextLSN();//TO-DO
-       int lsn = 0;
+        int lsn = lsnMng.nextLSN();//TO-DO
+        //int lsn = 0;
         Page page = new Page(pageid, lsn, data);
 
         System.out.println("TA: " + taid + ", Page: " + pageid + " - " + data);
-        
-        if (!_ongoingTransactions.get(taid).contains(pageid)) {
-            _ongoingTransactions.get(taid).add(pageid);
+
+        Log log = new Log(lsn, taid, "write", pageid, data);
+        logMng.writeLog(log);
+         System.out.println("WRITE Log written.");
+        if (!currentTAs.get(taid).contains(pageid)) {
+            currentTAs.get(taid).add(pageid);
         }
         
-        _buffer.put(page.getPageId(), page);
+        pageBuffer.put(page.getPageId(), page);
+        System.out.println("Page written to Buffer "+page.getPageId());
         if (bufferFull()) {
+            System.out.println("Buffer is full.");
             pushCommittedTAs();
         }
     }
@@ -85,23 +96,27 @@ public class PersistenceManager {
      * @param taid
      */
     public void commit(int taid) {
-        System.out.println("Committed TA: " + taid);
-        _ongoingTransactions.remove(taid);
+        System.out.println("Committed TA " + taid);
+        int lsn = lsnMng.nextLSN();
+            Log log = new Log(lsn, taid, "Commit", 0, null);
+            logMng.writeLog(log);
+             System.out.println("Commit Log written.");
+        currentTAs.remove(taid);
         if (bufferFull()) {
             pushCommittedTAs();
         }
     }
 
     private boolean bufferFull() {
-        return (_buffer.size() == 5);
+        return (pageBuffer.size() == 5);
     }
 
     private void pushCommittedTAs() {
         //Iterate through Buffer PageIds
-        for (final int pageId : _buffer.keySet()) {
+        for (final int pageId : pageBuffer.keySet()) {
             boolean pageCommitted = true;
             //Check of the PageId is in one of the ongoing TAs
-            for (final ArrayList<Integer> pageIdArray : _ongoingTransactions.values()) {
+            for (final ArrayList<Integer> pageIdArray : currentTAs.values()) {
                 if (pageIdArray.contains(pageId)) {
                     //if found - it means not committed
                     pageCommitted = false;
@@ -109,45 +124,45 @@ public class PersistenceManager {
                 }
             }
             if (pageCommitted) {
-                writePageOnPersistenceStorage(pageId, _buffer.get(pageId).getLSN(), _buffer.get(pageId).getData());
+                propagatePageOnPersistenceStorage2(pageId, pageBuffer.get(pageId).getLSN(), pageBuffer.get(pageId).getData());
             }
         }
         //If the buffer is still full because there were 
         //no committed TAs, clear it to avoid steal
-        if (_buffer.size() == 5) {
-            _buffer.clear();
+        if (pageBuffer.size() == 5) {
+            pageBuffer.clear();
         }
-        System.out.println("Buffer emptied!");
+        System.out.println("Buffer cleared (uncommitted Pages deleted)!");
     }
-    
-	void propagatePage(Page page){
-		try {
-			String content = page.getPageId() + "," + page.getLSN() + ","
-					+ page.getData() + "\n";
 
-			File file = new File(createPageFileName(page.getPageId()));
+    void propagatePage(Page page) {
+        try {
+            String content = page.getPageId() + "," + page.getLSN() + ","
+                    + page.getData() + "\n";
 
-			// if file doesnt exists, then create it
-			if (!file.exists()) {
-				file.createNewFile();
-			}
+            File file = new File(createPageFileName(page.getPageId()));
 
-			FileWriter fw = new FileWriter(file.getAbsoluteFile());
-			BufferedWriter bw = new BufferedWriter(fw);
-			bw.write(content);
-			bw.close();
+            // if file doesnt exists, then create it
+            if (!file.exists()) {
+                file.createNewFile();
+            }
 
-			System.out.println("Page is propagated (Page file is created)");
+            FileWriter fw = new FileWriter(file.getAbsoluteFile());
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(content);
+            bw.close();
 
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public String createPageFileName(int x){
-		//TODO: CREATE DIRECTORY
-		return "pages/" + x + ".txt";
-	}
+            System.out.println("Page is propagated (Page file is created)");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String createPageFileName(int x) {
+        //TODO: CREATE DIRECTORY
+        return "pages/" + x + ".txt";
+    }
 
     /**
      *
@@ -156,7 +171,7 @@ public class PersistenceManager {
      * @param data
      * @return Whether the page was written successfully or not
      */
-    private boolean writePageOnPersistenceStorage(int pageId, int lsn, String data) {
+    private boolean propagatePageOnPersistenceStorage2(int pageId, int lsn, String data) {
 
         File f = new File(pageId + ".txt");
 
@@ -168,6 +183,7 @@ public class PersistenceManager {
             e.printStackTrace();
             return false;
         }
+        System.out.println("Page "+ pageId +" propagated");
 
         return true;
     }
