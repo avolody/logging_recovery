@@ -8,14 +8,20 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class PersistenceManager implements IPersistentManager {
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
+@Singleton
+public class PersistenceManager {
 
     private static int taId;
     // pageId, page
     private static Map<Integer, Page> _buffer;
     // taId, pageIds
     private static Map<Integer, ArrayList<Integer>> _ongoingTransactions;
+    @Inject
     private LogManager logMng;
+    @Inject
     private LSNManager lsnMng;
     
     public PersistenceManager() {
@@ -57,7 +63,8 @@ public class PersistenceManager implements IPersistentManager {
      */
     public void write(int taid, int pageid, String data) {
 
-        int lsn = 0;//TO-DO
+        //int lsn = lsnMng.nextLSN();//TO-DO
+       int lsn = 0;
         Page page = new Page(pageid, lsn, data);
 
         System.out.println("TA: " + taid + ", Page: " + pageid + " - " + data);
