@@ -1,9 +1,11 @@
+package managers;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class LSNManager implements ILSNManager{
+public class LSNManager {
 	private final AtomicInteger lsn;
 	
 	public LSNManager(){

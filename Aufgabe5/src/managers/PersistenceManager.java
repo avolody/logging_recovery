@@ -1,3 +1,5 @@
+package managers;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -10,7 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
-public class PersistenceManager implements IPersistenceManager{
+public class PersistenceManager {
 
     private static int taId;
     // pageId, page
@@ -61,8 +63,8 @@ public class PersistenceManager implements IPersistenceManager{
      */
     public void write(int taid, int pageid, String data) {
 
-        int lsn = lsnMng.nextLSN();//TO-DO
-       //int lsn = 0;
+        //int lsn = lsnMng.nextLSN();//TO-DO
+       int lsn = 0;
         Page page = new Page(pageid, lsn, data);
 
         System.out.println("TA: " + taid + ", Page: " + pageid + " - " + data);

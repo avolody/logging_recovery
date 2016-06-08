@@ -1,9 +1,13 @@
+package managers;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
 
-public class LogManager implements ILogManager {
+public class LogManager {
 	
 	private FileWriter fw;
 	
@@ -19,8 +23,7 @@ public class LogManager implements ILogManager {
 		}
 	}
 	
-	@Override
-	public void writeLog(Log log) {
+	void writeLog(Log log) {
         try {
 			fw.write(log.toString());
 		} catch (IOException e) {
@@ -28,8 +31,7 @@ public class LogManager implements ILogManager {
 		}      
 	}
 
-	@Override
-	public Log readLog(BufferedReader reader) {
+	Log readLog(BufferedReader reader) {
 		 try {
 			String str;
 			str = reader.readLine();
